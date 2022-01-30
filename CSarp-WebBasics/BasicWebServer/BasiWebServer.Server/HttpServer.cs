@@ -4,6 +4,7 @@ using System;
 using System.Net;
 using System.Net.Sockets;
 using System.Text;
+using System.Threading.Tasks;
 
 namespace BasiWebServer.Server
 {
@@ -35,7 +36,7 @@ namespace BasiWebServer.Server
         {
         }
 
-        public void Start()
+        public async Task Start()
         {
             this.serverListener.Start();
 
@@ -44,48 +45,44 @@ namespace BasiWebServer.Server
 
             while (true)
             {
-                var connection = serverListener.AcceptTcpClient();
+                var connection = await serverListener.AcceptTcpClientAsync();
 
-                var networkStream = connection.GetStream();
-
-                var requestText = this.ReadRequest(networkStream);
-
-                Console.WriteLine(requestText);
-
-                var request = Request.Parse(requestText);
-
-                var response = this.routingTable.MatchRequest(request);
-
-                if (response.PreRenderAction != null)
+                _ = Task.Run(async () =>
                 {
-                    response.PreRenderAction(request, response);
-                }
 
-              WriteResponse(networkStream, response);
+                    var networkStream = connection.GetStream();
 
-                connection.Close();
+                    var requestText = await this.ReadRequest(networkStream);
+
+                    Console.WriteLine(requestText);
+
+                    var request = Request.Parse(requestText);
+
+                    var response = this.routingTable.MatchRequest(request);
+
+                    if (response.PreRenderAction != null)
+                    {
+                        response.PreRenderAction(request, response);
+                    }
+
+                    AddSession(request, response);
+
+                    await WriteResponse(networkStream, response);
+
+                    connection.Close();
+                });
             }
         }
 
-        private void WriteResponse(NetworkStream networkStream, Response response)
-        {
-            //var contentLength = Encoding.UTF8.GetByteCount(message);
-
-            //     var response = $@"HTTP/1.1 200 OK
-            // Content-Type:text/plain;charSet=UTF-8
-            // Content-Length:{contentLength}
-
-            // {message}";
-
+        private async Task WriteResponse(NetworkStream networkStream, Response response)
+        {  
             var responseBytes = Encoding.UTF8.GetBytes(response.ToString());
-
-            /////var responseBytes = Encoding.UTF8.GetBytes(response);
 
             networkStream.Write(responseBytes);
 
         }
 
-        private string ReadRequest(NetworkStream networkStream)
+        private async Task<string> ReadRequest(NetworkStream networkStream)
         {
             var bufferLength = 1024;
             var buffer = new byte[bufferLength];
@@ -109,6 +106,20 @@ namespace BasiWebServer.Server
             while (networkStream.DataAvailable);
 
             return requestBuilder.ToString();
+        }
+
+        private static void AddSession(Request request,Response response)
+        {
+            var sessionExists = request.Session
+                .ContainsKey(Session.SessionCurrentDateKey);
+
+            if (!sessionExists)
+            {
+                request.Session[Session.SessionCurrentDateKey]
+                    = DateTime.Now.ToString();
+
+                response.Cookies.Add(Session.SessionCookieName, request.Session.Id);
+            }
         }
     }
 }

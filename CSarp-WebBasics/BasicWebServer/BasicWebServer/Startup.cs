@@ -26,10 +26,12 @@ namespace BasicWebServer.Demo
               .MapGet("/Redirect", new RedirectResponse("https://softuni.org/"))
               .MapGet("/HTML", new HtmlResponse(Startup.HtmlForm))
               .MapPost("/HTML", new TextResponse("", Startup.AddFormDataAction))
-              //.MapGet("/Content", new HtmlResponse("", Startup.DownloadForm))
-              //.MapPost("/Content", new TextFileResponse("", Startup.FileName))
-              .MapGet("/Cookies", new HtmlResponse("", Startup.AddCookiesAction)))
-                .Start();
+              .MapGet("/Content", new HtmlResponse("", Startup.DownloadForm))
+              .MapPost("/Content", new TextFileResponse("", Startup.FileName))
+              .MapGet("/Cookies", new HtmlResponse("", Startup.AddCookiesAction))
+              .MapGet("/Session", new TextResponse("",
+                        Startup.DisplaySessionInfoAction)));
+                await server.Start();
         }
 
         private static void AddFormDataAction(Request request, Response response)
@@ -46,7 +48,7 @@ namespace BasicWebServer.Demo
 
         private static void AddCookiesAction(Request request, Response response)
         {
-            var requestHasCookies = request.Cookies.Any();
+            var requestHasCookies = request.Cookies.Any(c=> c.Name !=Session.SessionCookieName);
             var bodyText = "";
 
             if (requestHasCookies)
@@ -117,6 +119,26 @@ namespace BasicWebServer.Demo
 
                 return html.Substring(0, 2000);
             }
+        }
+
+        private static void DisplaySessionInfoAction(Request request,Response response)
+        {
+            var sessionExists = request.Session.ContainsKey(Session.SessionCurrentDateKey);
+
+            var bodyText = "";
+
+            if (sessionExists)
+            {
+                var currentDate = request.Session[Session.SessionCurrentDateKey];
+                bodyText = $"Stored date: {currentDate}";
+            }
+            else
+            {
+                bodyText = "Current date stored.";
+            }
+
+            response.Body = "";
+            response.Body += bodyText;
         }
     }
 }
