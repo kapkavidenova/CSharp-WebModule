@@ -73,8 +73,8 @@ namespace BasiWebServer.Server
                 });
             }
         }
-
-        private void WriteResponse(NetworkStream networkStream, Response response)
+        
+        private async Task WriteResponse(NetworkStream networkStream, Response response)
         {
             //var contentLength = Encoding.UTF8.GetByteCount(message);
 
@@ -86,13 +86,13 @@ namespace BasiWebServer.Server
 
             var responseBytes = Encoding.UTF8.GetBytes(response.ToString());
 
-            /////var responseBytes = Encoding.UTF8.GetBytes(response);
+            //var responseBytes = Encoding.UTF8.GetBytes(response);
 
-            networkStream.Write(responseBytes);
+            await networkStream.WriteAsync(responseBytes);
 
         }
 
-        private string ReadRequest(NetworkStream networkStream)
+        private async Task<string> ReadRequest(NetworkStream networkStream)
         {
             var bufferLength = 1024;
             var buffer = new byte[bufferLength];
@@ -103,7 +103,7 @@ namespace BasiWebServer.Server
 
             do
             {
-                var bytesRead = networkStream.Read(buffer, 0, bufferLength);
+                var bytesRead = await networkStream.ReadAsync(buffer, 0, bufferLength);
 
                 totalBytes += bytesRead;
 

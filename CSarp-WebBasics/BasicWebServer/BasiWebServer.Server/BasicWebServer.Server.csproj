@@ -4,13 +4,12 @@
     <TargetFramework>net6.0</TargetFramework>
   
   </PropertyGroup>
+	
+	<ItemGroup>
+		<Content Include="Views\**\*.*">
+			<CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+		</Content>
 
-  <ItemGroup>
-    <Compile Update="HttpServer.cs">
-      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
-    </Compile>
-  </ItemGroup>
-
-  
-
+</ItemGroup>
+	
 </Project>
