@@ -1,0 +1,11 @@
+{
+  "Version": 1,
+  "ProjectMap": {
+    "fa31d622-0ef5-4d69-9f64-a29dc3bb2100": {
+      "ProjectGuid": "fa31d622-0ef5-4d69-9f64-a29dc3bb2100",
+      "DisplayName": "SharedTrip",
+      "ColorIndex": 0
+    }
+  },
+  "NextColorIndex": 1
+}
